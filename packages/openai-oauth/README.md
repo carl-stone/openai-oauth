@@ -1,11 +1,15 @@
-# openai-oauth
+# @carl-stone/openai-oauth
 
-[Docs](https://github.com/EvanZhouDev/openai-oauth#dev-proxy) | [GitHub](https://github.com/EvanZhouDev/openai-oauth) | [npm](https://www.npmjs.com/package/openai-oauth)
+[Upstream](https://github.com/EvanZhouDev/openai-oauth) | [Memory PR](https://github.com/EvanZhouDev/openai-oauth/pull/20) | [npm](https://www.npmjs.com/package/@carl-stone/openai-oauth)
+
+This is a narrowly scoped Apache-2.0 fork of `openai-oauth` 2.0.0. It adds the
+opt-in, process-local Responses continuation state proposed in upstream pull
+request 20 and otherwise retains the upstream behavior.
 
 Turn your ChatGPT account into an OpenAI-compatible local API.
 
 ```bash
-> npx openai-oauth
+> npx @carl-stone/openai-oauth
 
 OpenAI-compatible endpoint ready at http://127.0.0.1:10531/v1
 Use this as your OpenAI base URL. No API key is required.
@@ -17,10 +21,10 @@ Available Models: gpt-5.6-sol, gpt-5.6-terra, gpt-image-2, ...
 Press `d` to keep it running in the background or `q` to quit. You can also manage it directly:
 
 ```bash
-npx openai-oauth --detach
-npx openai-oauth status
-npx openai-oauth logs --follow
-npx openai-oauth stop
+npx @carl-stone/openai-oauth --detach
+npx @carl-stone/openai-oauth status
+npx @carl-stone/openai-oauth logs --follow
+npx @carl-stone/openai-oauth stop
 ```
 
 ## Package Notes
@@ -65,10 +69,10 @@ The CLI resolves the latest published Codex client version automatically. Advanc
 
 ### Responses continuation state
 
-The server is stateless by default, so clients must send their full conversation history with every Responses request. Clients that continue with `previous_response_id` or `item_reference` can opt into the in-memory continuation state already provided by `@openai-oauth/core`:
+The server is stateless by default, so clients must send their full conversation history with every Responses request. Clients that continue with `previous_response_id` or `item_reference` can opt into the built-in in-memory continuation state:
 
 ```bash
-npx openai-oauth --responses-state memory
+npx @carl-stone/openai-oauth --responses-state memory
 ```
 
 Memory mode stores response inputs and outputs as shared history chains, plus saved response items, only in the server process. It defaults to 256 response lookup IDs and 2,000 items; use `--responses-max-responses` and `--responses-max-items` to change those positive-integer count limits. The limits do not cap bytes, and retained descendants keep their shared ancestors reachable. The cache does not persist across restarts, so references created by a previous process cannot be continued; start a new client conversation after restarting the server. The server still sends expanded full history upstream, where repeated prompt prefixes can remain eligible for upstream prompt caching.
@@ -77,4 +81,4 @@ The same mode is available programmatically through `responsesState: "memory"` o
 
 ## More
 
-[Learn more in the openai-oauth README.](https://github.com/EvanZhouDev/openai-oauth#readme)
+[Learn more in the upstream openai-oauth README.](https://github.com/EvanZhouDev/openai-oauth#readme)

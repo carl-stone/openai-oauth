@@ -36,7 +36,7 @@ describe("cli logging", () => {
 
 	test("formats foreground controls and startup copy", () => {
 		expect(cliMessages.backgroundActions).toBe(
-			"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+			"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 		)
 		expect(cliMessages.foregroundControls).toBe(
 			"[d] Run in background  [q] Quit",
@@ -71,7 +71,7 @@ describe("cli logging", () => {
 				"",
 				"Available Models: gpt-5.4, gpt-5.4-mini",
 				"",
-				"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+				"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 			].join("\n"),
 		)
 	})
@@ -81,7 +81,7 @@ describe("cli logging", () => {
 			[
 				"OpenAI OAuth is running at http://127.0.0.1:10531/v1",
 				"",
-				"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+				"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 			].join("\n"),
 		)
 	})
@@ -91,7 +91,7 @@ describe("cli logging", () => {
 			[
 				"OpenAI OAuth is now running in the background at http://127.0.0.1:10531/v1",
 				"",
-				"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+				"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 			].join("\n"),
 		)
 	})
@@ -101,7 +101,7 @@ describe("cli logging", () => {
 			[
 				"OpenAI OAuth is already running at http://127.0.0.1:10531/v1",
 				"",
-				"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+				"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 			].join("\n"),
 		)
 	})
@@ -111,7 +111,7 @@ describe("cli logging", () => {
 			[
 				"OpenAI OAuth is not running.",
 				"",
-				"Start with `npx openai-oauth`",
+				"Start with `npx @carl-stone/openai-oauth`",
 			].join("\n"),
 		)
 	})

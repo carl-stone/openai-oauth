@@ -32,8 +32,10 @@ describe("update check", () => {
 			onWarning: (message) => warnings.push(message),
 		})
 
-		expect(urls).toEqual(["https://registry.npmjs.org/openai-oauth/latest"])
-		expect(warnings[0]).toContain("npx openai-oauth@latest")
+		expect(urls).toEqual([
+			"https://registry.npmjs.org/@carl-stone%2Fopenai-oauth/latest",
+		])
+		expect(warnings[0]).toContain("npx @carl-stone/openai-oauth@latest")
 	})
 
 	test("warns when a newer version is available", async () => {
@@ -58,7 +60,7 @@ describe("update check", () => {
 		})
 
 		expect(warnings).toEqual([
-			"A newer version of openai-oauth is available: 0.0.1 -> 0.0.4.\nRun `npx openai-oauth@latest` to use the newest version.",
+			"A newer version of @carl-stone/openai-oauth is available: 0.0.1 -> 0.0.4.\nRun `npx @carl-stone/openai-oauth@latest` to use the newest version.",
 		])
 	})
 

@@ -223,10 +223,14 @@ describe("openai oauth cli", () => {
 	test("documents background lifecycle commands and flags", () => {
 		const help = toHelpMessage()
 
-		expect(help).toContain("npx openai-oauth@latest --detach [options]")
-		expect(help).toContain("npx openai-oauth@latest status")
-		expect(help).toContain("npx openai-oauth@latest logs [--follow]")
-		expect(help).toContain("npx openai-oauth@latest stop")
+		expect(help).toContain(
+			"npx @carl-stone/openai-oauth@latest --detach [options]",
+		)
+		expect(help).toContain("npx @carl-stone/openai-oauth@latest status")
+		expect(help).toContain(
+			"npx @carl-stone/openai-oauth@latest logs [--follow]",
+		)
+		expect(help).toContain("npx @carl-stone/openai-oauth@latest stop")
 		expect(help).toContain("-d, --detach")
 		expect(help).toContain("-f, --follow")
 		expect(help).toContain("--responses-state <mode>")
@@ -287,7 +291,7 @@ describe("openai oauth cli", () => {
 
 	test("formats a missing explicit auth file message", () => {
 		expect(toMissingAuthFileMessage("/tmp/missing-auth.json")).toContain(
-			"Run `npx openai-oauth login` and try again.",
+			"Run `npx @carl-stone/openai-oauth login` and try again.",
 		)
 		expect(toMissingAuthFileMessage("/tmp/missing-auth.json")).toContain(
 			"/tmp/missing-auth.json",

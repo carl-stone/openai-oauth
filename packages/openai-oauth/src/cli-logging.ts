@@ -80,11 +80,13 @@ const notRunning = "OpenAI OAuth is not running."
 export const cliMessages = {
 	foregroundControls: "[d] Run in background  [q] Quit",
 	backgroundActions:
-		"Stop with `npx openai-oauth stop` or see logs with `npx openai-oauth logs --follow`",
+		"Stop with `npx @carl-stone/openai-oauth stop` or see logs with `npx @carl-stone/openai-oauth logs --follow`",
 	notRunning,
-	notRunningWithStart: [notRunning, "", "Start with `npx openai-oauth`"].join(
-		"\n",
-	),
+	notRunningWithStart: [
+		notRunning,
+		"",
+		"Start with `npx @carl-stone/openai-oauth`",
+	].join("\n"),
 	noLogs: "No OpenAI OAuth logs found.",
 	followingLogs: "Following OpenAI OAuth logs. Press Ctrl+C to stop following.",
 	stopped: "OpenAI OAuth stopped.",

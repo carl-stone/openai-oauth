@@ -1,7 +1,7 @@
 {
-	"name": "openai-oauth",
-	"version": "2.0.0",
-	"description": "Free OpenAI API access with your ChatGPT account.",
+	"name": "@carl-stone/openai-oauth",
+	"version": "2.0.0-memory.1",
+	"description": "OpenAI OAuth with opt-in, process-local Responses continuation state.",
 	"keywords": [
 		"openai",
 		"oauth",
@@ -42,14 +42,14 @@
 		"test:live": "LIVE_CODEX_E2E=1 vitest run test/live.e2e.test.ts"
 	},
 	"dependencies": {
-		"@openai-oauth/ai-sdk": "workspace:*",
-		"@openai-oauth/core": "workspace:*",
-		"@openai-oauth/local": "workspace:*",
+		"@openai-oauth/ai-sdk": "2.0.0",
+		"@openai-oauth/local": "2.0.0",
 		"ai": "6.0.116",
 		"yargs": "17.7.3"
 	},
 	"devDependencies": {
 		"@ai-sdk/openai": "3.0.41",
+		"@openai-oauth/core": "workspace:*",
 		"@types/node": "20.17.24",
 		"@types/yargs": "^17.0.33",
 		"typescript": "5.9.2",
@@ -58,13 +58,16 @@
 	},
 	"author": "EvanZhouDev",
 	"license": "Apache-2.0",
+	"publishConfig": {
+		"access": "public"
+	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/EvanZhouDev/openai-oauth.git",
+		"url": "git+https://github.com/carl-stone/openai-oauth.git",
 		"directory": "packages/openai-oauth"
 	},
 	"bugs": {
-		"url": "https://github.com/EvanZhouDev/openai-oauth/issues"
+		"url": "https://github.com/carl-stone/openai-oauth/issues"
 	},
-	"homepage": "https://github.com/EvanZhouDev/openai-oauth#readme"
+	"homepage": "https://github.com/carl-stone/openai-oauth/tree/main/packages/openai-oauth#readme"
 }

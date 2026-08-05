@@ -35,7 +35,7 @@ import { DEFAULT_PORT } from "./shared.js"
 import { checkForOpenAIOAuthUpdates } from "./update-check.js"
 import { packageVersion } from "./version.js"
 
-const cliCommand = "npx openai-oauth@latest"
+const cliCommand = "npx @carl-stone/openai-oauth@latest"
 
 export type CliArgs = {
 	command: "serve" | "login" | "logs" | "status" | "stop"
@@ -121,7 +121,7 @@ const helpLines = [
 	`  --version                  Show version (${packageVersion})`,
 	"",
 	"Notes",
-	"  If no auth file is found, run: npx openai-oauth login",
+	"  If no auth file is found, run: npx @carl-stone/openai-oauth login",
 	"  By default, the latest Codex version and available account models are discovered automatically.",
 ]
 
@@ -363,14 +363,14 @@ const toMissingAuthFileMessage = (authFilePath: string | undefined): string => {
 	if (authFilePath) {
 		return [
 			`No auth file was found at ${authFilePath}.`,
-			"Run `npx openai-oauth login` and try again.",
+			"Run `npx @carl-stone/openai-oauth login` and try again.",
 		].join("\n")
 	}
 
 	const candidates = resolveAuthFileCandidates(undefined)
 	return [
 		`No auth file was found in the default search paths: ${candidates.join(", ")}.`,
-		"Run `npx openai-oauth login` and try again.",
+		"Run `npx @carl-stone/openai-oauth login` and try again.",
 	].join("\n")
 }
 
@@ -707,7 +707,7 @@ export const runCli = async (argv: string[] = hideBin(process.argv)) => {
 				throw new Error(
 					[
 						toExistingAuthFileMessage(existingAuthFile),
-						"Run `npx openai-oauth login` in an interactive terminal to confirm overwrite.",
+						"Run `npx @carl-stone/openai-oauth login` in an interactive terminal to confirm overwrite.",
 					].join("\n"),
 				)
 			}

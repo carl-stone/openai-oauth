@@ -1,4 +1,5 @@
-const registryUrl = "https://registry.npmjs.org/openai-oauth/latest"
+const registryUrl =
+	"https://registry.npmjs.org/@carl-stone%2Fopenai-oauth/latest"
 
 type RegistryPackageResponse = {
 	version?: unknown
@@ -125,7 +126,7 @@ export const checkForOpenAIOAuthUpdates = async (
 	}
 
 	dependencies.onWarning?.(
-		`A newer version of openai-oauth is available: ${normalizedCurrentVersion} -> ${latestVersion}.\nRun \`npx openai-oauth@latest\` to use the newest version.`,
+		`A newer version of @carl-stone/openai-oauth is available: ${normalizedCurrentVersion} -> ${latestVersion}.\nRun \`npx @carl-stone/openai-oauth@latest\` to use the newest version.`,
 	)
 }
 

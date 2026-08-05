@@ -25,33 +25,6 @@ const MODEL_CATALOG_TTL_MS = 5 * 60 * 1000
 const MODEL_CATALOG_FAILURE_TTL_MS = 60 * 1000
 const RESPONSES_LITE_HEADER = "x-openai-internal-codex-responses-lite"
 
-export const CODEX_RESPONSES_ADAPTER_VERSION = 1
-export const CODEX_RESPONSES_REQUEST_FIELDS = [
-	"model",
-	"instructions",
-	"input",
-	"tools",
-	"tool_choice",
-	"parallel_tool_calls",
-	"reasoning",
-	"store",
-	"stream",
-	"stream_options",
-	"include",
-	"service_tier",
-	"prompt_cache_key",
-	"text",
-	"client_metadata",
-] as const
-
-const CODEX_RESPONSES_REQUEST_FIELD_SET = new Set<string>(
-	CODEX_RESPONSES_REQUEST_FIELDS,
-)
-const CODEX_REASONING_FIELDS = new Set(["effort", "summary", "context"])
-const CODEX_STREAM_OPTIONS_FIELDS = new Set(["reasoning_summary_delivery"])
-const CODEX_TEXT_FIELDS = new Set(["verbosity", "format"])
-const CODEX_TEXT_FORMAT_FIELDS = new Set(["type", "strict", "schema", "name"])
-
 export type FetchFunction = typeof fetch
 
 export type OpenAIOAuthSession = {
@@ -171,17 +144,6 @@ type RequestParts = {
 export type NormalizeCodexResponsesBodyOptions = {
 	instructions?: string
 	forceStream?: boolean
-}
-
-export type AdaptCodexResponsesBodyOptions = {
-	allowLocalReplayFields?: boolean
-}
-
-export type CodexResponsesAdaptation = {
-	body: Record<string, unknown>
-	promptCacheBreakpointCount: number
-	removedFieldPaths: string[]
-	version: typeof CODEX_RESPONSES_ADAPTER_VERSION
 }
 
 type InternalNormalizeCodexResponsesBodyOptions =
@@ -612,142 +574,6 @@ const normalizeResponsesInput = (input: unknown): unknown =>
 			]
 		: input
 
-const formatFieldPath = (parts: Array<string | number>): string =>
-	parts
-		.map((part, index) =>
-			typeof part === "number" ? "[]" : index === 0 ? part : `.${part}`,
-		)
-		.join("")
-
-const removePromptCacheBreakpoints = (
-	value: unknown,
-	path: Array<string | number>,
-	removedFieldPaths: Set<string>,
-	counter: { value: number },
-): unknown => {
-	if (Array.isArray(value)) {
-		return value.map((item, index) =>
-			removePromptCacheBreakpoints(
-				item,
-				[...path, index],
-				removedFieldPaths,
-				counter,
-			),
-		)
-	}
-
-	if (!isRecord(value)) {
-		return value
-	}
-
-	const next: Record<string, unknown> = {}
-	for (const [key, item] of Object.entries(value)) {
-		const itemPath = [...path, key]
-		if (key === "prompt_cache_breakpoint") {
-			counter.value += 1
-			removedFieldPaths.add(formatFieldPath(itemPath))
-			continue
-		}
-		next[key] = removePromptCacheBreakpoints(
-			item,
-			itemPath,
-			removedFieldPaths,
-			counter,
-		)
-	}
-	return next
-}
-
-const filterRecordFields = (
-	value: unknown,
-	allowedFields: Set<string>,
-	path: string,
-	removedFieldPaths: Set<string>,
-): unknown => {
-	if (!isRecord(value)) {
-		return value
-	}
-
-	const filtered: Record<string, unknown> = {}
-	for (const [key, item] of Object.entries(value)) {
-		if (!allowedFields.has(key)) {
-			removedFieldPaths.add(`${path}.${key}`)
-			continue
-		}
-		filtered[key] = item
-	}
-	return Object.keys(filtered).length > 0 ? filtered : undefined
-}
-
-export const adaptCodexResponsesBody = (
-	body: Record<string, unknown>,
-	options: AdaptCodexResponsesBodyOptions = {},
-): CodexResponsesAdaptation => {
-	const removedFieldPaths = new Set<string>()
-	const promptCacheBreakpointCount = { value: 0 }
-	const withoutBreakpoints = removePromptCacheBreakpoints(
-		body,
-		[],
-		removedFieldPaths,
-		promptCacheBreakpointCount,
-	) as Record<string, unknown>
-	const adapted: Record<string, unknown> = {}
-
-	for (const [key, value] of Object.entries(withoutBreakpoints)) {
-		if (
-			!CODEX_RESPONSES_REQUEST_FIELD_SET.has(key) &&
-			!(options.allowLocalReplayFields && key === "previous_response_id")
-		) {
-			removedFieldPaths.add(key)
-			continue
-		}
-		adapted[key] = value
-	}
-
-	if ("reasoning" in adapted) {
-		adapted.reasoning = filterRecordFields(
-			adapted.reasoning,
-			CODEX_REASONING_FIELDS,
-			"reasoning",
-			removedFieldPaths,
-		)
-	}
-	if ("stream_options" in adapted) {
-		adapted.stream_options = filterRecordFields(
-			adapted.stream_options,
-			CODEX_STREAM_OPTIONS_FIELDS,
-			"stream_options",
-			removedFieldPaths,
-		)
-	}
-	if ("text" in adapted) {
-		adapted.text = filterRecordFields(
-			adapted.text,
-			CODEX_TEXT_FIELDS,
-			"text",
-			removedFieldPaths,
-		)
-		if (isRecord(adapted.text) && "format" in adapted.text) {
-			adapted.text = {
-				...adapted.text,
-				format: filterRecordFields(
-					adapted.text.format,
-					CODEX_TEXT_FORMAT_FIELDS,
-					"text.format",
-					removedFieldPaths,
-				),
-			}
-		}
-	}
-
-	return {
-		body: adapted,
-		promptCacheBreakpointCount: promptCacheBreakpointCount.value,
-		removedFieldPaths: [...removedFieldPaths].sort(),
-		version: CODEX_RESPONSES_ADAPTER_VERSION,
-	}
-}
-
 const addEncryptedReasoningContent = (include: unknown): string[] => {
 	const values = Array.isArray(include)
 		? include.filter((value): value is string => typeof value === "string")
@@ -918,10 +744,9 @@ const prepareResponsesRequestBody = async (
 		}
 
 		const expanded = state?.expandRequestBody(normalized) ?? normalized
-		const adapted = adaptCodexResponsesBody(expanded)
 
 		return {
-			body: JSON.stringify(adapted.body),
+			body: JSON.stringify(expanded),
 			requestBody: normalized,
 			wantsStream,
 		}

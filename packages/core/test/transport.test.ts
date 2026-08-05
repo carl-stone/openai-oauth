@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 import { createOpenAIOAuthTransport } from "../src/index.js"
 import {
-	adaptCodexResponsesBody,
-	CODEX_RESPONSES_ADAPTER_VERSION,
 	createOpenAIOAuthTransport as createRuntimeOpenAIOAuthTransport,
 	normalizeCodexResponsesBody,
 	type OpenAIOAuthTransportOptions,
@@ -135,124 +133,6 @@ describe("normalizeCodexResponsesBody", () => {
 	})
 })
 
-describe("adaptCodexResponsesBody", () => {
-	test("adapts a Posit 0.9.8 explicit-cache request to the Codex contract", () => {
-		const request = {
-			model: "gpt-5.6-luna",
-			input: [
-				{
-					role: "developer",
-					content: [
-						{
-							type: "input_text",
-							text: "stable instructions",
-							prompt_cache_breakpoint: { mode: "explicit" },
-						},
-					],
-				},
-				{
-					role: "user",
-					content: [
-						{
-							type: "input_image",
-							image_url: "data:image/png;base64,AA==",
-							prompt_cache_breakpoint: { mode: "explicit" },
-						},
-					],
-				},
-				{
-					type: "function_call_output",
-					call_id: "call_1",
-					output: {
-						type: "text",
-						value: "done",
-						prompt_cache_breakpoint: { mode: "explicit" },
-					},
-				},
-			],
-			tools: [
-				{ type: "function", name: "inspect_r", parameters: {} },
-				{ type: "function", name: "read_file", parameters: {} },
-			],
-			tool_choice: "auto",
-			parallel_tool_calls: true,
-			reasoning: { effort: "high", summary: "detailed", mode: "pro" },
-			store: false,
-			stream: true,
-			include: ["reasoning.encrypted_content"],
-			prompt_cache_key: "posit-session",
-			prompt_cache_options: { mode: "explicit", ttl: "30m" },
-			prompt_cache_retention: "24h",
-			metadata: { private: "must-not-be-forwarded" },
-		}
-		const original = structuredClone(request)
-
-		const adapted = adaptCodexResponsesBody(request)
-
-		expect(request).toEqual(original)
-		expect(adapted.version).toBe(CODEX_RESPONSES_ADAPTER_VERSION)
-		expect(adapted.promptCacheBreakpointCount).toBe(3)
-		expect(adapted.removedFieldPaths).toEqual([
-			"input[].content[].prompt_cache_breakpoint",
-			"input[].output.prompt_cache_breakpoint",
-			"metadata",
-			"prompt_cache_options",
-			"prompt_cache_retention",
-			"reasoning.mode",
-		])
-		expect(adapted.body.prompt_cache_key).toBe("posit-session")
-		expect(adapted.body.reasoning).toEqual({
-			effort: "high",
-			summary: "detailed",
-		})
-		expect(JSON.stringify(adapted.body)).not.toContain(
-			"prompt_cache_breakpoint",
-		)
-		expect(adapted.body.tools).toEqual(request.tools)
-	})
-
-	test("filters nested controls and permits replay IDs only before expansion", () => {
-		const request = {
-			model: "gpt-5.6-sol",
-			previous_response_id: "resp_1",
-			stream_options: {
-				reasoning_summary_delivery: "sequential_cutoff",
-				unknown: true,
-			},
-			text: {
-				verbosity: "low",
-				unknown: true,
-				format: {
-					type: "json_schema",
-					name: "result",
-					strict: true,
-					schema: { type: "object" },
-					unknown: true,
-				},
-			},
-		}
-
-		const inbound = adaptCodexResponsesBody(request, {
-			allowLocalReplayFields: true,
-		})
-		const upstream = adaptCodexResponsesBody(request)
-
-		expect(inbound.body.previous_response_id).toBe("resp_1")
-		expect(upstream.body.previous_response_id).toBeUndefined()
-		expect(inbound.removedFieldPaths).toEqual([
-			"stream_options.unknown",
-			"text.format.unknown",
-			"text.unknown",
-		])
-		expect(upstream.removedFieldPaths).toEqual([
-			"previous_response_id",
-			"stream_options.unknown",
-			"text.format.unknown",
-			"text.unknown",
-		])
-	})
-})
-
 describe("createCodexOAuthFetch", () => {
 	test("returns an OpenAI-compatible list of visible models", async () => {
 		const fetch = createMockFetch()
@@ -328,46 +208,6 @@ describe("createCodexOAuthFetch", () => {
 		expect(body.store).toBe(false)
 		expect(body.stream).toBe(true)
 		expect(body.max_output_tokens).toBeUndefined()
-	})
-
-	test("enforces the Codex contract after request normalization", async () => {
-		const fetch = createMockFetch()
-		const oauthFetch = createCodexOAuthFetch({ auth: session, fetch })
-
-		await oauthFetch("https://example.test/v1/responses", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				model: "gpt-5.2",
-				input: [
-					{
-						role: "user",
-						content: [
-							{
-								type: "input_text",
-								text: "hello",
-								prompt_cache_breakpoint: { mode: "explicit" },
-							},
-						],
-					},
-				],
-				prompt_cache_key: "posit-session",
-				prompt_cache_options: { mode: "explicit", ttl: "30m" },
-				prompt_cache_retention: "24h",
-				unknown_future_field: true,
-				stream: true,
-			}),
-		})
-
-		const [, init] = upstreamCalls(fetch)[0] ?? []
-		const upstreamBody = JSON.parse(String(init?.body))
-		expect(upstreamBody.prompt_cache_key).toBe("posit-session")
-		expect(upstreamBody.prompt_cache_options).toBeUndefined()
-		expect(upstreamBody.prompt_cache_retention).toBeUndefined()
-		expect(upstreamBody.unknown_future_field).toBeUndefined()
-		expect(JSON.stringify(upstreamBody)).not.toContain(
-			"prompt_cache_breakpoint",
-		)
 	})
 
 	test("bridges non-streaming OpenAI requests over the required SSE transport", async () => {
@@ -504,7 +344,7 @@ describe("createCodexOAuthFetch", () => {
 		])
 	})
 
-	test("drops unsupported replay IDs when local replay state is disabled", async () => {
+	test("can disable local replay state entirely", async () => {
 		const fetch = createMockFetch()
 
 		const oauthFetch = createCodexOAuthFetch({
@@ -526,14 +366,13 @@ describe("createCodexOAuthFetch", () => {
 		})
 
 		const [, init] = upstreamCalls(fetch)[0] ?? []
-		const body = JSON.parse(String(init?.body))
-		expect(body).toMatchObject({
+		expect(JSON.parse(String(init?.body))).toMatchObject({
 			model: "gpt-5.2",
+			previous_response_id: "resp_1",
 			input: [],
 			store: false,
 			instructions: "",
 		})
-		expect(body.previous_response_id).toBeUndefined()
 	})
 
 	test("runtime connection replays prior response state locally", async () => {

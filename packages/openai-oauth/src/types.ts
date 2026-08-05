@@ -117,6 +117,33 @@ export type OpenAIOAuthServerLogEvent =
 			path: "/v1/chat/completions"
 			requestId: string
 	  }
+	| {
+			type: "responses_request"
+			adapterVersion: number
+			model?: string
+			path: "/v1/responses"
+			promptCacheBreakpointCount: number
+			removedFieldPaths: string[]
+			requestId: string
+			stream: boolean
+			toolCount: number
+	  }
+	| {
+			type: "responses_response"
+			durationMs: number
+			path: "/v1/responses"
+			requestId: string
+			status: number
+			stream: boolean
+			usage: UsageLike
+	  }
+	| {
+			type: "responses_error"
+			durationMs: number
+			path: "/v1/responses"
+			requestId: string
+			status: 0
+	  }
 
 export type OpenAIOAuthResponsesStateMode = "stateless" | "memory"
 

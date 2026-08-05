@@ -13,6 +13,7 @@
 	},
 	"scripts": {
 		"build": "turbo run build",
+		"check:posit-codex-compat": "bun scripts/check-posit-codex-compat.ts",
 		"dev": "turbo run dev --parallel",
 		"typecheck": "turbo run typecheck",
 		"test": "turbo run test",

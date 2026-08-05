@@ -161,6 +161,14 @@ npx openai-oauth
 
 This starts an OpenAI-compatible endpoint (by default at `localhost:10531`) that is connected to your ChatGPT account.
 
+For Posit Assistant 0.9.8 in RStudio, use the default stateless Responses path on the configured local port:
+
+```bash
+node packages/openai-oauth/dist/cli.js --port 10532
+```
+
+Set the OpenAI provider base URL to `http://127.0.0.1:10532/v1`. The gateway translates Posit's public GPT-5.6 explicit-cache controls to the narrower ChatGPT Codex contract while preserving `prompt_cache_key`. Run `bun run check:posit-codex-compat` to compare the adapter with the installed Posit protocol and current Codex source.
+
 Press `d` to keep it running in the background or `q` to quit. You can also start it in the background directly:
 
 ```bash

@@ -84,7 +84,12 @@ const handleRoutes = async (
 	}
 
 	if (request.method === "POST" && url.pathname === "/v1/responses") {
-		return handleResponsesRequest(request, client, responsesState)
+		return handleResponsesRequest(
+			request,
+			client,
+			responsesState,
+			requestLogger,
+		)
 	}
 
 	if (request.method === "POST" && url.pathname === "/v1/chat/completions") {

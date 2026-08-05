@@ -33,6 +33,8 @@ const fetch = transport.fetch;
 
 The transport supports Responses, model discovery, image generation, and multipart image editing. Its in-memory Responses cache maps saved response IDs to request inputs and response outputs, and saved item IDs to response items. Responses share their prior-history chains instead of retaining a separate cumulative transcript for every ID. The cache defaults to 256 response lookup IDs and 2,000 items; `responsesStateOptions` can set either positive-integer count bound. These are entry-count limits, not byte limits. Client adapters build higher-level interfaces such as Chat Completions on top.
 
+Before forwarding a Responses request, the transport applies the versioned ChatGPT Codex contract adapter after any local replay expansion. `prompt_cache_key` is preserved, while public-API-only explicit cache controls and unsupported root or nested fields are removed. Adapter authors can call `adaptCodexResponsesBody` and inspect its field-only diagnostics without exposing request content.
+
 Create an OAuth request:
 
 ```ts
@@ -46,6 +48,9 @@ const request = await createOpenAIOAuthRequest({
 Core exports include:
 
 - `createOpenAIOAuthTransport`
+- `adaptCodexResponsesBody`
+- `CODEX_RESPONSES_ADAPTER_VERSION`
+- `CODEX_RESPONSES_REQUEST_FIELDS`
 - `createOpenAIOAuthRequest`
 - `exchangeOpenAIOAuthCode`
 - `refreshOpenAIOAuthTokens`

@@ -285,6 +285,113 @@ describe("openai oauth server", () => {
 		expect(response.headers.has("access-control-allow-origin")).toBe(false)
 	})
 
+	test("adapts Posit cache controls and emits privacy-safe Responses logs", async () => {
+		const authFilePath = await createAuthFile()
+		const events: unknown[] = []
+		const fetch = vi.fn(async (input: RequestInfo | URL) => {
+			if (String(input).includes("/backend-api/codex/models?")) {
+				return Response.json({
+					models: [{ slug: "gpt-5.6-luna", visibility: "list" }],
+				})
+			}
+			return createSseResponse([
+				[
+					"response.completed",
+					{
+						type: "response.completed",
+						response: {
+							id: "resp_1",
+							status: "completed",
+							output: [],
+							usage: {
+								input_tokens: 12,
+								input_tokens_details: { cached_tokens: 8 },
+								output_tokens: 3,
+								output_tokens_details: { reasoning_tokens: 1 },
+								total_tokens: 15,
+							},
+						},
+					},
+				],
+			])
+		})
+		const handler = createOpenAIOAuthFetchHandler({
+			authFilePath,
+			ensureFresh: false,
+			fetch,
+			requestLogger: (event) => events.push(event),
+		})
+
+		const response = await handler(
+			new Request("http://localhost/v1/responses", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					model: "gpt-5.6-luna",
+					input: [
+						{
+							role: "user",
+							content: [
+								{
+									type: "input_text",
+									text: "private prompt text",
+									prompt_cache_breakpoint: { mode: "explicit" },
+								},
+							],
+						},
+					],
+					prompt_cache_key: "posit-session",
+					prompt_cache_options: { mode: "explicit", ttl: "30m" },
+					stream: true,
+				}),
+			}),
+		)
+
+		expect(response.status).toBe(200)
+		await response.text()
+		await new Promise((resolve) => setTimeout(resolve, 0))
+		expect(events).toHaveLength(2)
+		const calls = upstreamResponseCalls(fetch)
+		const [, init] = calls[0] ?? []
+		const upstreamBody = JSON.parse(String(init?.body))
+		expect(upstreamBody.prompt_cache_key).toBe("posit-session")
+		expect(upstreamBody.prompt_cache_options).toBeUndefined()
+		expect(JSON.stringify(upstreamBody)).not.toContain(
+			"prompt_cache_breakpoint",
+		)
+		expect(events).toMatchObject([
+			{
+				type: "responses_request",
+				adapterVersion: 1,
+				model: "gpt-5.6-luna",
+				promptCacheBreakpointCount: 1,
+				removedFieldPaths: [
+					"input[].content[].prompt_cache_breakpoint",
+					"prompt_cache_options",
+				],
+				stream: true,
+			},
+			{
+				type: "responses_response",
+				status: 200,
+				stream: true,
+				usage: {
+					inputTokens: 12,
+					cachedInputTokens: 8,
+					outputTokens: 3,
+					reasoningTokens: 1,
+					totalTokens: 15,
+				},
+			},
+		])
+		expect(JSON.stringify(events)).not.toContain("private prompt text")
+
+		await fs.rm(path.dirname(authFilePath), {
+			recursive: true,
+			force: true,
+		})
+	})
+
 	test("aggregates streaming responses requests into json when stream is false", async () => {
 		const authFilePath = await createAuthFile()
 		const fetch = vi.fn(async (input: RequestInfo | URL) => {

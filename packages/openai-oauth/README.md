@@ -43,6 +43,29 @@ curl http://127.0.0.1:10531/v1/images/generations \
   -d '{"model":"gpt-image-2","prompt":"A tiny house in a forest","quality":"low"}'
 ```
 
+### Posit Assistant 0.9.8 in RStudio
+
+Build and start the local endpoint on the port configured in RStudio:
+
+```bash
+bun run build
+node packages/openai-oauth/dist/cli.js --port 10532
+```
+
+Use `http://127.0.0.1:10532/v1` as the OpenAI provider base URL. Posit Assistant 0.9.8 sends complete Responses history with `store: false`, so leave the gateway in its default `stateless` mode; do not add `--responses-state memory`.
+
+GPT-5.6's public Responses API supports explicit prompt caching, but the ChatGPT Codex endpoint has a narrower request contract. The gateway preserves Posit's stable `prompt_cache_key` while removing `prompt_cache_options`, deprecated `prompt_cache_retention`, and nested `prompt_cache_breakpoint` markers. The resulting request uses the Codex endpoint's implicit cache behavior. Posit's cache-keepalive requests continue to reuse the stable key.
+
+The adapter also removes other root or nested controls that the current Codex client cannot serialize. Opt-in request logs report only the model, removed field paths and counts, timing, status, and token usage; they never include prompts, tool inputs/results, credentials, headers, or reasoning content.
+
+Before or after a Posit/Codex update, run the read-only compatibility check:
+
+```bash
+bun run check:posit-codex-compat
+```
+
+It reports the installed Posit Assistant version and protocol, fetches the current `openai/codex` main SHA, and fails if the gateway's Responses root-field contract has drifted. Set `POSIT_ASSISTANT_ROOT` only when the Assistant bundle is installed somewhere other than RStudio's default per-user location.
+
 Common flags:
 
 | Config | Flag | Default |

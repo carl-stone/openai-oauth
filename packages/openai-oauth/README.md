@@ -56,7 +56,7 @@ Common flags:
 | Model allowlist | `--models` | Account-specific Codex models discovered from ChatGPT |
 | Auth file path | `--oauth-file` | `$CODEX_HOME/auth.json` or `~/.codex/auth.json` |
 | Responses continuation | `--responses-state` | `stateless` |
-| Saved response lookup limit | `--responses-max-responses` | `256` |
+| Saved response history limit | `--responses-max-responses` | `256` |
 | Saved response-item limit | `--responses-max-items` | `2000` |
 | Open browser | `--open` / `--no-open` | `--open` |
 | Login timeout | `--login-timeout-ms` | `300000` |
@@ -75,7 +75,7 @@ The server is stateless by default, so clients must send their full conversation
 npx @carl-stone/openai-oauth --responses-state memory
 ```
 
-Memory mode stores response inputs and outputs as shared history chains, plus saved response items, only in the server process. It defaults to 256 response lookup IDs and 2,000 items; use `--responses-max-responses` and `--responses-max-items` to change those positive-integer count limits. The limits do not cap bytes, and retained descendants keep their shared ancestors reachable. The cache does not persist across restarts, so references created by a previous process cannot be continued; start a new client conversation after restarting the server. The server still sends expanded full history upstream, where repeated prompt prefixes can remain eligible for upstream prompt caching.
+Memory mode stores response inputs and outputs as bounded shared history chains, plus saved response items, only in the server process. It defaults to 256 response history entries and 2,000 items; use `--responses-max-responses` and `--responses-max-items` to change those positive-integer count limits. The limits do not cap bytes within an individual item or turn. The cache does not persist across restarts, so references created by a previous process cannot be continued; start a new client conversation after restarting the server. The server still sends expanded full history upstream, where repeated prompt prefixes can remain eligible for upstream prompt caching.
 
 The same mode is available programmatically through `responsesState: "memory"` on `createOpenAIOAuthFetchHandler()` and `startOpenAIOAuthServer()`. Set `responsesMaxResponses` and `responsesMaxItems` to configure the bounds.
 

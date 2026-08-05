@@ -3,15 +3,9 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const root = join(import.meta.dir, "..")
-const packageDirs = [
-	"packages/core",
-	"packages/local",
-	"packages/web",
-	"packages/openai-client",
-	"packages/ai-sdk",
-	"packages/react",
-	"packages/openai-oauth",
-]
+// The fork publishes only the scoped OAuth package. Its workspace dependencies
+// remain the upstream 2.0.0 packages and are not release targets here.
+const packageDirs = ["packages/openai-oauth"]
 
 const packages = packageDirs.map((directory) => ({
 	directory,

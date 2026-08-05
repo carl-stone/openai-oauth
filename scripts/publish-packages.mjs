@@ -7,15 +7,9 @@ import { fileURLToPath } from "node:url"
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const requestedArgs = process.argv.slice(2)
 
-const packageDirs = [
-	"packages/core",
-	"packages/local",
-	"packages/web",
-	"packages/openai-client",
-	"packages/ai-sdk",
-	"packages/react",
-	"packages/openai-oauth",
-]
+// The fork publishes only the scoped OAuth package. Its workspace dependencies
+// remain the upstream 2.0.0 packages and are not release targets here.
+const packageDirs = ["packages/openai-oauth"]
 const version = JSON.parse(
 	readFileSync(join(root, packageDirs[0], "package.json"), "utf8"),
 ).version

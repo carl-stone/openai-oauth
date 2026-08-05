@@ -64,6 +64,26 @@ const trimOldestEntries = <T>(
 	}
 }
 
+const trimParentChain = (
+	entry: CachedResponseEntry | undefined,
+	maxEntries: number,
+): CachedResponseEntry | undefined => {
+	if (entry == null || maxEntries < 1) {
+		return undefined
+	}
+
+	let current = entry
+	for (
+		let depth = 1;
+		depth < maxEntries && current.parent != null;
+		depth += 1
+	) {
+		current = current.parent
+	}
+	current.parent = undefined
+	return entry
+}
+
 export class CodexResponsesState {
 	private readonly items = new Map<string, JsonRecord>()
 	private readonly responses = new Map<string, CachedResponseEntry>()
@@ -248,6 +268,7 @@ export class CodexResponsesState {
 				: previousResponseId == null
 					? undefined
 					: this.responses.get(previousResponseId)
+		const boundedParent = trimParentChain(parent, this.maxResponses - 1)
 		const input =
 			preparedRequest != null
 				? preparedRequest.input.map((item) => cloneValue(item))
@@ -257,7 +278,7 @@ export class CodexResponsesState {
 
 		this.responses.delete(responseId)
 		this.responses.set(responseId, {
-			parent,
+			parent: boundedParent,
 			input,
 			output,
 		})

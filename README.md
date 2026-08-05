@@ -258,7 +258,7 @@ The CLI also supports a few configuration options that generally do not need to 
       <td>Saved response lookup limit</td>
       <td><code>--responses-max-responses</code></td>
       <td><code>256</code></td>
-      <td>Maximum saved response lookup IDs retained in memory mode.</td>
+      <td>Maximum response history entries retained in memory mode.</td>
     </tr>
     <tr>
       <td>Saved response-item limit</td>
@@ -297,7 +297,7 @@ The CLI server remains stateless by default. Clients that continue Responses con
 npx openai-oauth --responses-state memory
 ```
 
-Memory mode stores response inputs and outputs as shared history chains, plus saved response items, in the server process. It defaults to 256 response lookup IDs and 2,000 items; use <code>--responses-max-responses</code> and <code>--responses-max-items</code> to change those entry-count limits. The limits do not cap bytes, and retained descendants keep their shared ancestors reachable. The cache is discarded when the process exits, so clients must begin a new conversation after a restart. The server expands references into full history before sending the request upstream; repeated prompt prefixes can still be eligible for upstream prompt caching.
+Memory mode stores response inputs and outputs as bounded shared history chains, plus saved response items, in the server process. It defaults to 256 response history entries and 2,000 items; use <code>--responses-max-responses</code> and <code>--responses-max-items</code> to change those entry-count limits. The limits do not cap bytes within an individual item or turn. The cache is discarded when the process exits, so clients must begin a new conversation after a restart. The server expands references into full history before sending the request upstream; repeated prompt prefixes can still be eligible for upstream prompt caching.
 
 The SDK is primarily built around two concepts:
 

@@ -1,6 +1,6 @@
 {
 	"name": "@carl-stone/openai-oauth",
-	"version": "2.0.0-memory.1",
+	"version": "2.0.0-memory.2",
 	"description": "OpenAI OAuth with opt-in, process-local Responses continuation state.",
 	"keywords": [
 		"openai",

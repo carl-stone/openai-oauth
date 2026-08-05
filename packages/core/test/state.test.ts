@@ -212,7 +212,7 @@ describe("CodexResponsesState", () => {
 		])
 	})
 
-	test("keeps ancestor data reachable after its response ID is evicted", () => {
+	test("bounds history when its response ID is evicted", () => {
 		const state = new CodexResponsesState({ maxResponses: 1 })
 		state.rememberResponse(
 			{
@@ -244,14 +244,12 @@ describe("CodexResponsesState", () => {
 				input: [],
 			}).input,
 		).toEqual([
-			{ role: "user", content: "First" },
-			{ id: "msg_1", type: "message", content: "First reply" },
 			{ role: "user", content: "Second" },
 			{ id: "msg_2", type: "message", content: "Second reply" },
 		])
 	})
 
-	test("captures the prepared parent after its lookup ID is evicted", () => {
+	test("does not retain an evicted parent through a prepared request", () => {
 		const state = new CodexResponsesState({ maxResponses: 1 })
 		state.rememberResponse(
 			{
@@ -283,10 +281,43 @@ describe("CodexResponsesState", () => {
 				input: [],
 			}).input,
 		).toEqual([
-			{ role: "user", content: "First" },
-			{ id: "msg_1", type: "message", content: "First reply" },
 			{ role: "user", content: "Second" },
 			{ id: "msg_2", type: "message", content: "Second reply" },
+		])
+	})
+
+	test("keeps retained history bounded across a long continuation", () => {
+		const state = new CodexResponsesState({ maxResponses: 2 })
+
+		for (let turn = 0; turn < 20; turn += 1) {
+			const id = `resp_${turn}`
+			const previousResponseId = turn === 0 ? undefined : `resp_${turn - 1}`
+			const request = {
+				...(previousResponseId == null
+					? {}
+					: { previous_response_id: previousResponseId }),
+				input: [{ role: "user", content: `Turn ${turn}` }],
+			}
+			state.expandRequestBody(request)
+			state.rememberResponse(
+				{
+					id,
+					output: [{ id: `msg_${turn}`, type: "message" }],
+				},
+				request,
+			)
+		}
+
+		expect(
+			state.expandRequestBody({
+				previous_response_id: "resp_19",
+				input: [],
+			}).input,
+		).toEqual([
+			{ role: "user", content: "Turn 18" },
+			{ id: "msg_18", type: "message" },
+			{ role: "user", content: "Turn 19" },
+			{ id: "msg_19", type: "message" },
 		])
 	})
 
